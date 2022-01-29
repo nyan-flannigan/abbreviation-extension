@@ -1,5 +1,3 @@
-//alert("The Website Will Track Acronyms!")
-
 var abbreviationDictionary = {};
 var exclusionWords = ["by","a","with","for","of","and","to"];
 var tooltipStyleStr =
@@ -53,6 +51,18 @@ for (var i = 0; i<parNodeList.length; i++) {
      $(item).html(edithtmlString(str))
 }
 
+
+chrome.runtime.sendMessage({tabQuery: "current"}, function(tabInfo){
+	//console.log(tabInfo.tabTest);
+	//alert(tabInfo);
+	console.log(tabInfo);
+	//console.log(tabInfo);
+	//tabInfo.then(alert(tabInfo.result))
+	
+})
+//.then(alert(tabInfo.tabTest));
+//let myPromise = new Promise(chrome.runtime.sendMessage()){}
+//chrome.runtime.sendMessage({tabQuery: "current"},function(tabInfo){tabInfo}).then(function(tabInfo) {alert(tabInfo.tabTest)});
 
 //parNode = document.getElementById("Par22");
 //updateDictionary(parNode);
@@ -122,8 +132,8 @@ function updateDictionary(nodeOjb){
               //localStorage.setItem(temp,fullMeaning);
               abbreviationDictionary[temp] = fullMeaning;
               //localStorage.setItem("fullDictionary",JSON.stringify(abbreviationDictionary));
-              JSON_string = JSON.stringify(abbreviationDictionary);
-              chrome.storage.sync.set({fullDictionary: JSON_string});
+              //JSON_string = JSON.stringify(abbreviationDictionary);
+              //chrome.storage.sync.set({fullDictionary: JSON_string});
             }
         }
     }
@@ -152,7 +162,6 @@ function noLetters(string){
 	}
 	return true
 }
-
 
 //str
 //find index of ( and ) then create substring of inner text
