@@ -52,17 +52,14 @@ for (var i = 0; i<parNodeList.length; i++) {
 }
 
 
-chrome.runtime.sendMessage({tabQuery: "current"}, function(tabURL){
-	//console.log(tabInfo.tabTest);
-	//alert(tabInfo);
-	//console.log(tabInfo);
-	//console.log(tabInfo);
-	//tabInfo.then(alert(tabInfo.result))
-	abbreviationDictionary["url"] = tabURL;
-	
-})
+chrome.runtime.sendMessage({tabQuery: "current"}, function(tabInfo){
+	abbreviationDictionary["url"] = tabInfo[0];
+	abbreviationDictionary["title"] = tabInfo[1];
+	console.log(abbreviationDictionary);
+	chrome.storage.sync.set({fullDictionary: abbreviationDictionary});
+});
 
-console.log(abbreviationDictionary)
+
 //.then(alert(tabInfo.tabTest));
 //let myPromise = new Promise(chrome.runtime.sendMessage()){}
 //chrome.runtime.sendMessage({tabQuery: "current"},function(tabInfo){tabInfo}).then(function(tabInfo) {alert(tabInfo.tabTest)});

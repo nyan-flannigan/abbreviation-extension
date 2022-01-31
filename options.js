@@ -8,8 +8,10 @@
 //console.log("Tab where edit button was pressed: "+currentTabID);
 storedDictionary = chrome.storage.sync.get(['fullDictionary'],function(result){
 	//var fullDictionaryObjectFromStorage = JSON.parse(JSON.stringify(result.key));
-	const storedDictionary = JSON.parse(result['fullDictionary']);
+	//const storedDictionary = JSON.parse(result['fullDictionary']);
+	const storedDictionary = result['fullDictionary'];
 	if(Object.keys(storedDictionary).length > 1){
+		setName(storedDictionary);
 		createTable(storedDictionary)
 		console.log(storedDictionary);
 	}
@@ -34,6 +36,15 @@ storedDictionary = chrome.storage.sync.get(['fullDictionary'],function(result){
 				+ JSON.stringify(list[1]) + "<br>"
 				+ JSON.stringify(list[2]);
 */
+function setName(abbreviationObjList) {
+	var titleFild = document.getElementById("title");
+	if(abbreviationObjList.title){
+		titleFild.innerHTML = abbreviationObjList.title;
+	}
+	else{
+		titleFild.innerHTML = "No title found";
+	}
+}
 
 function createTable(abbreviationObjList) {
 	/*
@@ -62,6 +73,9 @@ function createTable(abbreviationObjList) {
 	var table = document.getElementById("abbreviationTable");
 	// Adding the data to the table
 	for (const abbreviation in abbreviationObjList){
+		if(abbreviation=="url"||abbreviation=="title"){
+			continue;
+		}
 		var row = table.insertRow(0);
 		var abbreviationStr = row.insertCell(0);
 		var abbreviationDefinition = row.insertCell(1);

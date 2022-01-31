@@ -18,7 +18,7 @@ async function getURL(request){
   		
   		//promise = chrome.tabs.query({currentWindow: true});
   		//sendResponse(getCurrentTab);
-  		return tabs[0].url;
+  		return [tabs[0].url, tabs[0].title];
   	}
   	
 }
