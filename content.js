@@ -1,5 +1,9 @@
+//content script that is injected in each page that matches manifest URL specifier
+
 var abbreviationDictionary = {};
 var exclusionWords = ["by","a","with","for","of","and","to"];
+
+//tooltip style formatting that gets appended to head of page
 var tooltipStyleStr =
 [
 '.tooltip {',
@@ -40,7 +44,9 @@ var tooltipStyleStr =
 ].join('\n')
 $('<style>').text(tooltipStyleStr).appendTo(document.head);
 
-
+//gets list of all paragraphs in DOM and then loops through
+//if a paragraph contains an opening and closing braket updateDictionary() is called 
+//and then the internal html text is edited and replaced using edithtmlString() funciton
 parNodeList = document.body.querySelectorAll("p");
 for (var i = 0; i<parNodeList.length; i++) {
 	var item = parNodeList.item(i);
@@ -51,7 +57,7 @@ for (var i = 0; i<parNodeList.length; i++) {
      $(item).html(edithtmlString(str))
 }
 
-
+//send message to background scipt to get tab info (title and URL) and store
 chrome.runtime.sendMessage({tabQuery: "current"}, function(tabInfo){
 	abbreviationDictionary["url"] = tabInfo[0];
 	abbreviationDictionary["title"] = tabInfo[1];
@@ -59,81 +65,75 @@ chrome.runtime.sendMessage({tabQuery: "current"}, function(tabInfo){
 	chrome.storage.sync.set({fullDictionary: abbreviationDictionary});
 });
 
+/*Function that extracts the full definition for an abbreviation that is introduced
+Assumptions:
+  -->chars of the abbreviation that are minuscule do not have a leading word
+     e.g the s in CSCs or PSCs or the leading i in iPCS
+  -->When abbreviation is introduced it is in round brackets and follows the full meaning declaration
 
-//.then(alert(tabInfo.tabTest));
-//let myPromise = new Promise(chrome.runtime.sendMessage()){}
-//chrome.runtime.sendMessage({tabQuery: "current"},function(tabInfo){tabInfo}).then(function(tabInfo) {alert(tabInfo.tabTest)});
-
-//parNode = document.getElementById("Par22");
-//updateDictionary(parNode);
-
-//console.log('local storage length after extracting abbrvs '+localStorage.length)
-
-
-//this function assumes that chars of the abbreviation that are minuscule do not have a leading word
-// e.g the s in CSCs or PSCs or the leading i in iPCS
+Two sections:
+  1. Identify parenthetical word
+  2. Extract leading full definition 
+*/
 function updateDictionary(nodeOjb){
-    var str = $(nodeOjb).text();
-    const openingBracketMatches = [...str.matchAll(/\(/g)];
-    const closingBracketMatches = [...str.matchAll(/\)/g)];
+    var paragraph = $(nodeOjb).text();
+    const openingBracketMatches = [...paragraph.matchAll(/\(/g)];
+    const closingBracketMatches = [...paragraph.matchAll(/\)/g)];
 
     if(openingBracketMatches.length!=closingBracketMatches.length){
         Error("Different number of openingBracketMatches and closingBracketMatches!")
+        //unfinished
     }
     else{
         for (var i = 0; i < openingBracketMatches.length; i++)
         {
-            temp = str.substring(openingBracketMatches[i].index+1,closingBracketMatches[i].index);
-            firstChar = temp[0];
-            majusculeCount = (temp.match(/[A-Z]/g)||[]).length;
+            parentheticalWord = paragraph.substring(openingBracketMatches[i].index+1,closingBracketMatches[i].index);
+            firstChar = parentheticalWord[0];
+            majusculeCount = (parentheticalWord.match(/[A-Z]/g)||[]).length;
             
-            if (!abbreviationDictionary[temp] && temp.length < 10 && isLetter(firstChar) && majusculeCount > 1){
-              firstMajusculeLetter = listMajuscule(temp)[0];
+            if (!abbreviationDictionary[parentheticalWord] && parentheticalWord.length < 10 && isLetter(firstChar) && majusculeCount > 1){
+              firstMajusculeLetter = listMajuscule(parentheticalWord)[0];
 
-              wordsOfStr = str.split(" ");
-              if(temp.includes(" ")){
-              	firstSectionOfTemp = temp.split(" ")[0]
+              wordsOfParagraph = paragraph.split(" ");
+              if(parentheticalWord.includes(" ")){
+              	firstSectionOfparentheticalWord = parentheticalWord.split(" ")[0]
               }else{
-              	firstSectionOfTemp = temp;
+              	firstSectionOfparentheticalWord = parentheticalWord;
               }
-              const wordMatches = (word) => word.includes(firstSectionOfTemp); 
+              const wordMatches = (word) => word.includes(firstSectionOfparentheticalWord); 
               //find index where extracted abbreviation is 
-              abbreviationIndex = wordsOfStr.findIndex(wordMatches);
+              abbreviationIndex = wordsOfParagraph.findIndex(wordMatches);
 
-              mainWordTotal = listMajuscule(temp).length;
-              firstLetterRepeats = temp.split(firstMajusculeLetter).length-1;
+              //counts number of uppercase letters in brackets
+              mainWordTotal = listMajuscule(parentheticalWord).length; 
+              firstLetterRepeats = parentheticalWord.split(firstMajusculeLetter).length-1;
               
-              //in theory if start close to () and count number of words until reach repeats this will be first word of string
+              //in theory if start close to the parentheticalWord and count number of words until reach repeats this will be first word of string
               var count = 0;
               var matchCount = 0;
               var mainWordCount = 0;
-              //loops backwards through wordsOfStr array until has the right number of "main words" or find right number of first letter matches 
+              //loops backwards through wordsOfParagraph array until has the right number of "main words" or find right number of first letter matches 
               while(mainWordTotal>mainWordCount&&matchCount<firstLetterRepeats&&abbreviationIndex-count>0){
-              	  stringAtCurrentIndex = wordsOfStr[abbreviationIndex-count-1];
-              	  if(!(exclusionWords.indexOf(stringAtCurrentIndex.trim().toLowerCase()) > -1)&&!noLetters(stringAtCurrentIndex)){
-              	  		if(stringAtCurrentIndex[0]==firstMajusculeLetter||stringAtCurrentIndex[0]==firstMajusculeLetter.toLowerCase()){
-					        matchCount++;
-				         }
-				        if(stringAtCurrentIndex.indexOf("-")>-1){
-				        	hyphenIndex = stringAtCurrentIndex.indexOf("-");
-				        	if(stringAtCurrentIndex[hyphenIndex+1]==firstMajusculeLetter||stringAtCurrentIndex[hyphenIndex+1]==firstMajusculeLetter.toLowerCase()){
-				        		matchCount++;
-				        	}
-				        	mainWordCount++;
-              	         }  
-              	  	mainWordCount++;
-				  }
-                  count++;
+            	  stringAtCurrentIndex = wordsOfParagraph[abbreviationIndex-count-1];
+            	  if(!(exclusionWords.indexOf(stringAtCurrentIndex.trim().toLowerCase()) > -1)&&!noLetters(stringAtCurrentIndex)){
+          	  		if(stringAtCurrentIndex[0]==firstMajusculeLetter||stringAtCurrentIndex[0]==firstMajusculeLetter.toLowerCase()){
+                    matchCount++;
+                  }
+                  if(stringAtCurrentIndex.indexOf("-")>-1){
+                    hyphenIndex = stringAtCurrentIndex.indexOf("-");
+                    if(stringAtCurrentIndex[hyphenIndex+1]==firstMajusculeLetter||stringAtCurrentIndex[hyphenIndex+1]==firstMajusculeLetter.toLowerCase()){
+                      matchCount++;
+                    }
+                    mainWordCount++;
+                  }  
+                  mainWordCount++;
+                }
+                count++;
               }
-              fullMeaning = wordsOfStr.slice(abbreviationIndex-count, abbreviationIndex);
+              fullMeaning = wordsOfParagraph.slice(abbreviationIndex-count, abbreviationIndex);
               fullMeaning = fullMeaning.join(" ");
               
-              //console.log(temp)
-              //localStorage.setItem(temp,fullMeaning);
-              abbreviationDictionary[temp] = fullMeaning;
-              //localStorage.setItem("fullDictionary",JSON.stringify(abbreviationDictionary));
-              //JSON_string = JSON.stringify(abbreviationDictionary);
-              //chrome.storage.sync.set({fullDictionary: JSON_string});
+              abbreviationDictionary[parentheticalWord] = fullMeaning;
             }
         }
     }
@@ -163,9 +163,8 @@ function noLetters(string){
 	return true
 }
 
-//str
-//find index of ( and ) then create substring of inner text
-//compare to map / dictonary. Append formatted around (xyz)
+//Append tooltip format around abbreviation and replace paragraph text with new formatted text
+//BUG: If there is a string of char within one abbreviation that is its own abbreviation 
 function edithtmlString(str){
     for(const abbrev in abbreviationDictionary){
         newStr = str.split(abbrev);
