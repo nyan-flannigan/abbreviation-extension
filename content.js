@@ -62,7 +62,7 @@ chrome.runtime.sendMessage({tabQuery: "current"}, function(tabInfo){
 	abbreviationDictionary["url"] = tabInfo[0];
 	abbreviationDictionary["title"] = tabInfo[1];
 	console.log(abbreviationDictionary);
-	chrome.storage.sync.set({fullDictionary: abbreviationDictionary});
+	chrome.storage.sync.set({[abbreviationDictionary["url"]]: abbreviationDictionary});
 });
 
 /*Function that extracts the full definition for an abbreviation that is introduced
