@@ -1,4 +1,4 @@
-//get information from chrome storage cache and display in options page.
+//get information from chrome storage cache and display in "options" page.
 
 storedDictionary = chrome.storage.sync.get(['fullDictionary'],function(result){
 	//var fullDictionaryObjectFromStorage = JSON.parse(JSON.stringify(result.key));
@@ -39,5 +39,4 @@ function createTable(abbreviationObjList) {
 		abbreviationStr.innerHTML = abbreviation;
 		abbreviationDefinition.innerHTML = abbreviationObjList[abbreviation];
 	}
-
 }
