@@ -3,6 +3,16 @@
 var abbreviationDictionary = {};
 var exclusionWords = ["by","a","with","for","of","and","to"];
 
+chrome.runtime.onMessage.addListener(
+  function(request, sender, sendResponse) {
+      if(request.message === "toggleSidebar") {
+          // Do whatever you want here
+          console.log("Button was clicked in the popup!");
+          toggleSidebar();
+      }
+  }
+);
+
 //tooltip style formatting that gets appended to head of page
 var tooltipStyleStr =
 [
@@ -62,7 +72,7 @@ chrome.runtime.sendMessage({tabQuery: "current"}, function(tabInfo){
 	abbreviationDictionary["url"] = tabInfo[0];
 	abbreviationDictionary["title"] = tabInfo[1];
 	console.log(abbreviationDictionary);
-	chrome.storage.sync.set({fullDictionary: abbreviationDictionary});
+	//chrome.storage.sync.set({fullDictionary: abbreviationDictionary}); //previously used for options page
 });
 
 /*Function that extracts the full definition for an abbreviation that is introduced
@@ -174,4 +184,43 @@ function edithtmlString(str){
         str = newStr.join(tooltipInsertionStr);
     }
     return str;
+}
+
+function toggleSidebar() {
+  const sidebar = document.getElementById('extensionSidebar');
+
+  if (sidebar) {
+    sidebar.remove();
+  } else {
+    const div = document.createElement('div');
+    div.id = 'extensionSidebar';
+    div.style.position = 'fixed';
+    div.style.top = '0';
+    div.style.right = '0';
+    div.style.width = '200px';
+    div.style.height = '100%';
+    div.style.backgroundColor = 'white';
+    div.style.overflowY = 'auto';
+    div.style.zIndex = '9999';
+    
+    // Title
+    const titleField = document.createElement('h3');
+    titleField.textContent = abbreviationDictionary.title || "No title found";
+    div.appendChild(titleField);
+
+    // Table for abbreviations
+    const table = document.createElement('table');
+    for (const abbreviation in abbreviationDictionary) {
+      if (abbreviation !== "url" && abbreviation !== "title") {
+        const row = table.insertRow();
+        const abbreviationStr = row.insertCell(0);
+        const abbreviationDefinition = row.insertCell(1);
+        abbreviationStr.textContent = abbreviation;
+        abbreviationDefinition.textContent = abbreviationDictionary[abbreviation];
+      }
+    }
+    div.appendChild(table);
+    
+    document.body.appendChild(div);
+  }
 }
