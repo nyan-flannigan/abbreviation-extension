@@ -176,7 +176,8 @@ function noLetters(string){
 //Append tooltip format around abbreviation and replace paragraph text with new formatted text
 //BUG: If there is a string of char within one abbreviation that is its own abbreviation 
 function edithtmlString(str){
-    for(const abbrev in abbreviationDictionary){
+  const sortedAbbreviationDic = Object.keys(abbreviationDictionary).sort((a, b) => b.length - a.length);
+    for(const abbrev of sortedAbbreviationDic){
         newStr = str.split(abbrev);
         var tooltipStr = '<div class="tooltip">'+abbrev;
         var tooltiptext = '<span class="tooltiptext">'+abbreviationDictionary[abbrev]+'</span>';
